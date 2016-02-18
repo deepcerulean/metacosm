@@ -2,40 +2,19 @@ require 'spec_helper'
 
 describe Model do
   subject(:model) { Model.create }
-  let(:simulation) { model.send(:simulation) }
-
-  describe "#simulation" do
-    subject { simulation }
-    it { is_expected.to be_a(Simulation) }
-  end
-
-  describe "#simulate" do
-    context "simulation collaboration" do
-      subject { simulation }
-      after { model.simulate }
-      it { is_expected.to receive(:conduct) }
-    end
-  end
-
   describe "#id" do
-    it 'should be a monotonically incrementing id' do
-      a = Model.create
-      b = Model.create
-      expect(b.id).to eq(a.id+1)
-    end
-
     it 'should be retrievable by id' do
-      expect(Model.lookup(model.id)).to eq(model)
+      expect(Model.find(model.id)).to eq(model)
     end
   end
 end
 
-describe Simulation do
+describe "a simple simulation (fizzbuzz)" do
   subject(:simulation) { Simulation.new(model) }
+  let(:model) { Counter.create }
   let(:last_event) { simulation.model_events.last }
 
   describe "#apply" do
-    let(:model) { Counter.create }
     let(:increment_counter) do
       IncrementCounterCommand.new(1, model.id)
     end
@@ -134,6 +113,28 @@ describe Simulation do
 
           it { is_expected.to eq(n) }
         end
+      end
+    end
+  end
+end
+
+describe "a more complex simulation (village)" do
+  subject(:simulation) { Simulation.new(world) }
+  let(:world) { World.create }
+
+  describe "#apply" do
+    context 'create and populate villages' do
+      let(:create_village_command) do
+        CreateVillageCommand.new(world.id, "Oakville Ridge")
+      end
+
+      let(:village_names_query) do
+        VillageNamesQuery.new.execute(world_id: world.id) 
+      end
+
+      it 'should make a village' do
+        simulation.apply(create_village_command)
+        expect(village_names_query).to eq(['Oakville Ridge'])
       end
     end
   end

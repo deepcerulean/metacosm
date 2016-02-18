@@ -6,15 +6,6 @@ require 'metacosm/registrable'
 module Metacosm
   class Model
     extend Registrable
-
-    def simulate
-      simulation.conduct
-    end
-
-    protected
-    def simulation
-      @simulation ||= Simulation.new(self)
-    end
   end
 
   class View
@@ -36,7 +27,6 @@ module Metacosm
 
     def initialize(model)
       @model = model
-
       @model_events ||= []
       @model_event_stream = Frappuccino::Stream.new(model)
       @model_event_stream.on_value do |event|
@@ -61,11 +51,19 @@ module Metacosm
 
     def construct_listener_for(event)
       listener = Object.const_get(event.class.name.split('::').last + "Listener").new(self)
-      listener_stream = Frappuccino::Stream.new(listener)
-      listener_stream.on_value(&method(:receive))
+
+      # TODO some test which verifies we can receive events from
+      #      listeners
+      # listener_stream = Frappuccino::Stream.new(listener)
+      # listener_stream.on_value(&method(:receive))
       listener
+    rescue
+      binding.pry
     end
 
+    # TODO commands handlers can also probably be event sources
+    #      although this seems weird with the cases we are looking
+    #      at right now
     def handler_for(command)
       @handlers ||= {}
       @handlers[command] ||= Object.const_get(command.class.name.split('::').last + "Handler").new

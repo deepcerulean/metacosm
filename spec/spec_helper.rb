@@ -8,3 +8,4 @@ require 'metacosm'
 include Metacosm
 
 require 'support/fizz_buzz'
+require 'support/village'

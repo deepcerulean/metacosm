@@ -1,7 +1,6 @@
 class Counter < Model
   def initialize
     @counter = 0
-    super
   end
 
   def fizz!
@@ -34,9 +33,8 @@ end
 class CounterView < View
   attr_reader :value, :counter_id
 
-  def initialize(counter_id, value)
+  def initialize(counter_id:)
     @counter_id = counter_id
-    @value = value
   end
 
   def update_value(new_value)
@@ -50,7 +48,7 @@ end
 
 class IncrementCounterCommandHandler
   def handle(command)
-    counter = Counter.lookup(command.counter_id)
+    counter = Counter.find(command.counter_id)
     counter.increment!(command.increment)
   end
 end
@@ -60,19 +58,15 @@ class CounterIncrementedEvent < Struct.new(:counter_value, :counter_id); end
 class CounterIncrementedEventListener < EventListener
   def receive(event)
     counter_id, value = event.counter_id, event.counter_value
-    create_or_update_counter(counter_id, value)
+    update_counter_view(counter_id, value)
 
     fizz_buzz!(counter_id, value)
     puts(value) unless fizz?(value) || buzz?(value)
   end
 
-  protected
-  def create_or_update_counter(counter_id, value)
-    if (counter=CounterView.lookup(counter_id))
-      counter.update_value(value)
-    else
-      CounterView.create(counter_id, value)
-    end
+  def update_counter_view(counter_id, value)
+    counter_view = CounterView.where(counter_id: counter_id).first_or_create
+    counter_view.update_value(value)
   end
 
   private
@@ -88,7 +82,7 @@ end
 class FizzCommand < Struct.new(:counter_id, :value); end
 class FizzCommandHandler
   def handle(command)
-    counter = Counter.lookup(command.counter_id)
+    counter = Counter.find(command.counter_id)
     counter.fizz!
   end
 end
@@ -96,7 +90,7 @@ end
 class BuzzCommand < Struct.new(:counter_id, :value); end
 class BuzzCommandHandler
   def handle(command)
-    counter = Counter.lookup(command.counter_id)
+    counter = Counter.find(command.counter_id)
     counter.buzz!
   end
 end
@@ -117,7 +111,7 @@ end
 
 class CounterValueQuery
   def execute(counter_id:)
-    counter = CounterView.lookup(counter_id)
+    counter = CounterView.find(counter_id: counter_id)
     counter.value
   end
 end
