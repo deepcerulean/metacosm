@@ -1,36 +1,47 @@
+require 'passive_record'
+require 'passive_record/hstruct'
 require 'frappuccino'
 
+# require 'active_support/core_ext/string/inflections'
+
 require 'metacosm/version'
-require 'metacosm/registrable'
+require 'metacosm/hstruct'
 
 module Metacosm
   class Model
-    extend Registrable
+    include PassiveRecord
+    after_create { Simulation.current.watch(self) }
   end
 
   class View
-    extend Registrable
+    include PassiveRecord
+  end
+
+  class Event
+    include PassiveRecord
+  end
+
+  class Command
+    include PassiveRecord
   end
 
   class EventListener
-    def initialize(simulation)
-      @simulation = simulation
+    attr_reader :simulation
+
+    def initialize(sim)
+      @simulation = sim
     end
 
     def fire(command)
-      @simulation.apply(command)
+      simulation.apply(command)
     end
   end
 
   class Simulation
-    attr_reader :model, :model_events
-
-    def initialize(model)
-      @model = model
-      @model_events ||= []
-      @model_event_stream = Frappuccino::Stream.new(model)
-      @model_event_stream.on_value do |event|
-        @model_events << event
+    def watch(model)
+      model_events ||= []
+      model_event_stream = Frappuccino::Stream.new(model)
+      model_event_stream.on_value do |event|
         receive(event)
       end
     end
@@ -40,33 +51,40 @@ module Metacosm
     end
 
     def receive(event)
+      events.push(event)
+
       listener = listener_for(event)
       listener.receive(event)
     end
 
+    def events
+      @events ||= []
+    end
+
+    def self.current
+      @current ||= new
+    end
+
+    protected
     def listener_for(event)
       @listeners ||= {}
       @listeners[event] ||= construct_listener_for(event)
     end
 
-    def construct_listener_for(event)
-      listener = Object.const_get(event.class.name.split('::').last + "Listener").new(self)
-
-      # TODO some test which verifies we can receive events from
-      #      listeners
-      # listener_stream = Frappuccino::Stream.new(listener)
-      # listener_stream.on_value(&method(:receive))
-      listener
-    rescue
-      binding.pry
-    end
-
-    # TODO commands handlers can also probably be event sources
-    #      although this seems weird with the cases we are looking
-    #      at right now
+    # TODO should commands handlers also be event sources?
     def handler_for(command)
       @handlers ||= {}
       @handlers[command] ||= Object.const_get(command.class.name.split('::').last + "Handler").new
+    end
+
+    def construct_listener_for(event)
+      listener = Object.const_get(event.class.name.split('::').last + "Listener").
+        new(self)
+
+      # TODO should we receive events from listeners?
+      # listener_stream = Frappuccino::Stream.new(listener)
+      # listener_stream.on_value(&method(:receive))
+      listener
     end
   end
 end

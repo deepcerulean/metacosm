@@ -1,6 +1,6 @@
 name: metacosm
-summary: "TODO: Summary"
-description: "TODO: Description"
+summary: "reactive simulation framework"
+description: "pure Ruby functional-reactive simulation metaframework"
 license: MIT
 authors: Joseph Weissman
 email: jweissman1986@gmail.com

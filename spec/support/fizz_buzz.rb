@@ -1,6 +1,7 @@
 class Counter < Model
   def initialize
     @counter = 0
+    super
   end
 
   def fizz!
@@ -31,12 +32,7 @@ class Counter < Model
 end
 
 class CounterView < View
-  attr_reader :value, :counter_id
-
-  def initialize(counter_id:)
-    @counter_id = counter_id
-  end
-
+  attr_accessor :value, :counter_id
   def update_value(new_value)
     @value = new_value
     self
@@ -48,7 +44,7 @@ end
 
 class IncrementCounterCommandHandler
   def handle(command)
-    counter = Counter.find(command.counter_id)
+    counter = Counter.find_by(command.counter_id)
     counter.increment!(command.increment)
   end
 end
@@ -66,7 +62,7 @@ class CounterIncrementedEventListener < EventListener
 
   def update_counter_view(counter_id, value)
     counter_view = CounterView.where(counter_id: counter_id).first_or_create
-    counter_view.update_value(value)
+    counter_view.value = value #update_value(value)
   end
 
   private
@@ -82,7 +78,7 @@ end
 class FizzCommand < Struct.new(:counter_id, :value); end
 class FizzCommandHandler
   def handle(command)
-    counter = Counter.find(command.counter_id)
+    counter = Counter.find_by(command.counter_id)
     counter.fizz!
   end
 end
@@ -90,7 +86,7 @@ end
 class BuzzCommand < Struct.new(:counter_id, :value); end
 class BuzzCommandHandler
   def handle(command)
-    counter = Counter.find(command.counter_id)
+    counter = Counter.find_by(command.counter_id)
     counter.buzz!
   end
 end
@@ -111,7 +107,7 @@ end
 
 class CounterValueQuery
   def execute(counter_id:)
-    counter = CounterView.find(counter_id: counter_id)
+    counter = CounterView.find_by(counter_id: counter_id)
     counter.value
   end
 end
