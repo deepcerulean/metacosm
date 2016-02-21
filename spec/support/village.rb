@@ -1,8 +1,7 @@
 class Person < Model
   belongs_to :village
   attr_accessor :name
-
-  after_create { emit(created_event) }
+  after_create { emit created_event }
 
   def created_event
     PersonCreatedEvent.create(
@@ -23,7 +22,6 @@ class Village < Model
   attr_accessor :name
   belongs_to :world
   has_many :people
-
   after_create { emit created_event }
 
   def created_event
@@ -36,12 +34,10 @@ class Village < Model
 end
 
 class VillageView < View
-  attr_accessor :name, :village_id, :world_id
   belongs_to :world_view
   has_many :person_views
 
-  include PassiveRecord
-  has_many :person_views
+  attr_accessor :name, :village_id, :world_id
 end
 
 class World < Model
@@ -65,7 +61,7 @@ class WorldView < View
   end
 end
 
-class CreateVillageCommand < Command # Struct.new(:world_id, :name)
+class CreateVillageCommand < Command
   attr_accessor :village_name, :world_id
 end
 
@@ -83,9 +79,9 @@ end
 
 class VillageCreatedEventListener < EventListener
   def receive(evt)
-    world_id, village_id, village_name = 
+    world_id, village_id, village_name =
       evt.world_id, 
-      evt.village_id, 
+      evt.village_id,
       evt.village_name
 
     world = WorldView.where(world_id: world_id).first_or_create
@@ -115,10 +111,6 @@ class PersonCreatedEventListener < EventListener
       person_id: person_id,
       village_id: village_id
     )
-  rescue => ex
-    puts ex.message
-    puts ex.backtrace
-    binding.pry
   end
 end
 

@@ -1,5 +1,5 @@
 require 'passive_record'
-require 'passive_record/hstruct'
+# require 'passive_record/hstruct'
 require 'frappuccino'
 
 # require 'active_support/core_ext/string/inflections'
