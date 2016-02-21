@@ -17,9 +17,9 @@ module Metacosm
     include PassiveRecord
   end
 
-  class Event
-    include PassiveRecord
-  end
+  # class Event
+  #   include PassiveRecord
+  # end
 
   class Command
     include PassiveRecord
@@ -63,6 +63,10 @@ module Metacosm
 
     def self.current
       @current ||= new
+    end
+
+    def clear!
+      @events = []
     end
 
     protected

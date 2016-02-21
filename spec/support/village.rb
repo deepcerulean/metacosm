@@ -25,10 +25,10 @@ class Village < Model
   after_create { emit created_event }
 
   def created_event
-    VillageCreatedEvent.create(
-      village_name: self.name,
-      village_id: self.id,
-      world_id: self.world_id
+    VillageCreatedEvent.new(
+      self.world_id,
+      self.id,
+      self.name,
     )
   end
 end
@@ -52,29 +52,22 @@ end
 
 class WorldView < View
   attr_accessor :world_id
-
   has_many :village_views
   has_many :person_views, :through => :village_views
-
-  def villages
-    VillageView.where(world_id: world_id).all
-  end
 end
 
-class CreateVillageCommand < Command
-  attr_accessor :village_name, :world_id
+class CreateVillageCommand < Struct.new(:world_id, :village_id, :village_name)
 end
 
 class CreateVillageCommandHandler
   def handle(cmd)
-    world = World.find_by(cmd.world_id)
-    world.create_village(name: cmd.village_name)
+    world = World.where(id: cmd.world_id).first_or_create
+    world.create_village(name: cmd.village_name, id: cmd.village_id)
     self
   end
 end
 
-class VillageCreatedEvent < Event
-  attr_accessor :world_id, :village_id, :village_name
+class VillageCreatedEvent < Struct.new(:world_id, :village_id, :village_name)
 end
 
 class VillageCreatedEventListener < EventListener
@@ -93,13 +86,12 @@ class PopulateCommand < Struct.new(:world_id, :name_dictionary); end
 
 class PopulateCommandHandler
   def handle(cmd)
-    world = World.find_by(cmd.world_id)
+    world = World.find(cmd.world_id)
     world.populate!(cmd.name_dictionary)
   end
 end
 
-class PersonCreatedEvent < Event
-  attr_accessor :village_id, :person_id, :person_name
+class PersonCreatedEvent < Struct.new(:village_id, :person_id, :person_name)
 end
 
 class PersonCreatedEventListener < EventListener
@@ -116,15 +108,15 @@ end
 
 ## queries
 
-class VillageNamesQuery
-  def execute(world_id:)
+class VillageNamesQuery < Struct.new(:world_id)
+  def execute
     world = WorldView.where(world_id: world_id).first_or_create
-    world.villages.map(&:name)
+    world.village_views.map(&:name)
   end
 end
 
-class PeopleNamesQuery
-  def execute(world_id:)
+class PeopleNamesQuery < Struct.new(:world_id)
+  def execute #(world_id:)
     world_view = WorldView.where(world_id: world_id).first_or_create
     world_view.person_views.flat_map(&:person_name)
   end

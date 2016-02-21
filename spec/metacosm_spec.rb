@@ -111,12 +111,20 @@ end
 
 describe "a more complex simulation (village)" do
   subject(:simulation) { Simulation.current }
-  let!(:world) { World.create }
+  let!(:world) { World.create(id: world_id) }
+  let(:world_id) { 'world_id' }
 
   describe "#apply" do
     context 'create and populate villages' do
+      let(:village_id) { 'village_id' }
+      let(:village_name) { 'Oakville Ridge' }
+
       let(:create_village_command) do
-        CreateVillageCommand.create(world_id: world.id, village_name: "Oakville Ridge")
+        CreateVillageCommand.new(world_id, village_id, village_name)
+      end
+
+      let(:village_created_event) do
+        VillageCreatedEvent.new(world_id, village_id, village_name)
       end
 
       let(:populate_command) do
@@ -124,26 +132,39 @@ describe "a more complex simulation (village)" do
       end
 
       let(:village_names_query) do
-        VillageNamesQuery.new.execute(world_id: world.id)
+        VillageNamesQuery.new(world_id)
       end
 
       let(:people_names_query) do
-        PeopleNamesQuery.new.execute(world_id: world.id)
+        PeopleNamesQuery.new(world_id)
       end
 
       # it 'should make a person' do
 
-      it 'should make a village' do
-        simulation.apply(create_village_command)
-        expect(village_names_query).to eq(['Oakville Ridge'])
-        expect(simulation.events.last).to be_a(VillageCreatedEvent)
-        expect(simulation.events.last.village_name).to eq("Oakville Ridge")
+      # it 'should make a village' do
+      #   simulation.apply(create_village_command)
+      #   expect(simulation.events.last).to be_a(VillageCreatedEvent)
+      #   expect(simulation.events.last.village_name).to eq("Oakville Ridge")
+      # end
+
+      describe "handling a create village command" do
+        it 'should result in a village creation event' do
+          given_no_activity.
+            when(create_village_command).expect_events([village_created_event])
+        end
+      end
+
+      describe 'recieving a village created event' do
+        it 'should create a village view we can lookup' do 
+          given_events([village_created_event]).
+            expect_query(village_names_query, to_find: ["Oakville Ridge"])
+        end
       end
 
       let(:villages) { world.instance_variable_get('@villages') }
       let(:people)   { villages.first.instance_variable_get("@people") }
 
-      it 'should create and populate a village' do
+      xit 'should create and populate a village' do
         simulation.apply(create_village_command)
         simulation.apply(populate_command)
         expect(simulation.events.last).to be_a(PersonCreatedEvent)
@@ -151,7 +172,7 @@ describe "a more complex simulation (village)" do
         expect(people_names_query).to eq(["Alice"])
       end
 
-      it 'should create and populate two villages' do
+      xit 'should create and populate two villages' do
         simulation.apply(create_village_command)
         simulation.apply(create_village_command)
         simulation.apply(populate_command)
