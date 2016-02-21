@@ -20,7 +20,7 @@ There is a reactive Fizz Buzz implementation in `spec/support/fizz_buzz.rb` that
 
 ## Features
 
- - One interesting feature here is a sort of mock in-memory AR component called `Registrable` that is used for internal tests
+ - One interesting feature here is a sort of mock in-memory AR component called `Registrable` that is used for internal tests (note: this has been extracted to [PassiveRecord](http://github.com/deepcerulean/passive_record))
 
 ## Examples
 
