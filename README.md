@@ -4,7 +4,7 @@
 * [Documentation](http://rubydoc.info/gems/metacosm/frames)
 * [Email](mailto:jweissman1986 at gmail.com)
 
-[![Code Climate GPA](https://codeclimate.com/github//metacosm/badges/gpa.svg)](https://codeclimate.com/github//metacosm)
+[![Code Climate GPA](https://codeclimate.com/github/deepcerulean/metacosm/badges/gpa.svg)](https://codeclimate.com/github/deepcerulean/metacosm)
 
 ## Description
 
