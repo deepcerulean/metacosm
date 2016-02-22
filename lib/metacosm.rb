@@ -1,11 +1,6 @@
 require 'passive_record'
-# require 'passive_record/hstruct'
 require 'frappuccino'
-
-# require 'active_support/core_ext/string/inflections'
-
 require 'metacosm/version'
-require 'metacosm/hstruct'
 
 module Metacosm
   class Model
@@ -17,23 +12,9 @@ module Metacosm
     include PassiveRecord
   end
 
-  # class Event
-  #   include PassiveRecord
-  # end
-
-  class Command
-    include PassiveRecord
-  end
-
-  class EventListener
-    attr_reader :simulation
-
-    def initialize(sim)
-      @simulation = sim
-    end
-
+  class EventListener < Struct.new(:simulation)
     def fire(command)
-      simulation.apply(command)
+      self.simulation.apply(command)
     end
   end
 
@@ -50,8 +31,8 @@ module Metacosm
       handler_for(command).handle(command)
     end
 
-    def receive(event)
-      events.push(event)
+    def receive(event, record: true)
+      events.push(event) if record
 
       listener = listener_for(event)
       listener.receive(event)
@@ -70,24 +51,18 @@ module Metacosm
     end
 
     protected
-    def listener_for(event)
-      @listeners ||= {}
-      @listeners[event] ||= construct_listener_for(event)
-    end
-
-    # TODO should commands handlers also be event sources?
     def handler_for(command)
       @handlers ||= {}
       @handlers[command] ||= Object.const_get(command.class.name.split('::').last + "Handler").new
     end
 
-    def construct_listener_for(event)
-      listener = Object.const_get(event.class.name.split('::').last + "Listener").
-        new(self)
+    def listener_for(event)
+      @listeners ||= {}
+      @listeners[event] ||= construct_listener_for(event)
+    end
 
-      # TODO should we receive events from listeners?
-      # listener_stream = Frappuccino::Stream.new(listener)
-      # listener_stream.on_value(&method(:receive))
+    def construct_listener_for(event)
+      listener = Object.const_get(event.class.name.split('::').last + "Listener").new(self)
       listener
     end
   end

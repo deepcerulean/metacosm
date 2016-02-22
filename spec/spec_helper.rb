@@ -4,7 +4,6 @@ require 'rspec/its'
 require 'pry'
 require 'ostruct'
 require 'metacosm'
-require 'metacosm/hstruct'
 
 include Metacosm
 
@@ -13,17 +12,14 @@ require 'support/village'
 
 class GivenWhenThen < Struct.new(:given_events,:when_command,:then_event_class)
   include RSpec::Matchers
-  def when(command)
-    @when_command = command
+
+  def when(*commands)
+    @when_commands ||= []
+    commands.each do |command|
+      @when_commands.push command
+    end
     self
   end
-
-  # def expect_event_of_type(klass, with_attributes: {})
-  #   @then_event_class = klass
-  #   @then_events_attrs = with_attributes unless with_attributes.empty?
-  #   verify!
-  #   self
-  # end
 
   def expect_events(evts)
     @then_events = evts
@@ -38,30 +34,62 @@ class GivenWhenThen < Struct.new(:given_events,:when_command,:then_event_class)
     self
   end
 
+  protected
+
   def verify!
+    clean_slate!
+    receive_events!
+    fire_commands!
+
+    validate_events!
+    validate_query!
+
+    self
+  end
+
+  private
+
+  def clean_slate!
     PassiveRecord.drop_all
     Simulation.current.clear!
+  end
 
-    # TODO maybe clean slate here? (zero out events and destroy all models?)
-    self.given_events.each { |e| sim.receive(e) } if self.given_events
+  def receive_events!
+    unless self.given_events.nil?
+      self.given_events.each do |evt| 
+        sim.receive(evt, record: false)
+      end
+    end
+  end
 
-    sim.apply(@when_command) if @when_command
+  def fire_commands!
+    unless @when_commands.nil?
+      @when_commands.each do |cmd|
+        sim.apply(cmd)
+      end
+    end
+  end
 
-    expect(@then_event_class).to eq(sim.events.last.class) if @then_event_class
+  def validate_events!
+    if @then_event_class
+      expect(@then_event_class).to eq(sim.events.last.class) 
+    end
 
-    expect(@then_events).to match_array(sim.events) if @then_events
+    if @then_events
+      expect(@then_events).to match_array(sim.events) 
+    end
 
     if @then_event_attrs
       @then_event_attrs.each do |k,v|
         expect(sim.events.last.send(k)).to eq(v)
       end
     end
+  end
 
+  def validate_query!
     if @query
       expect(@query.execute).to eq(@expected_query_results)
     end
-
-    self
   end
 
   def sim

@@ -4,10 +4,10 @@ class Person < Model
   after_create { emit created_event }
 
   def created_event
-    PersonCreatedEvent.create(
-      person_name: self.name,
-      village_id: self.village_id,
-      person_id: self.id
+    PersonCreatedEvent.new(
+      self.village_id,
+      self.id,
+      self.name
     )
   end
 end
@@ -42,12 +42,13 @@ end
 
 class World < Model
   has_many :villages
+  has_many :people, :through => :villages
 
-  def populate!(name_dictionary)
-    villages.each do |village|
-      village.create_person(name: name_dictionary.sample)
-    end
-  end
+  # def populate!(name_dictionary)
+  #   villages.each do |village|
+  #     village.create_person(name: name_dictionary.sample)
+  #   end
+  # end
 end
 
 class WorldView < View
@@ -82,12 +83,11 @@ class VillageCreatedEventListener < EventListener
   end
 end
 
-class PopulateCommand < Struct.new(:world_id, :name_dictionary); end
-
-class PopulateCommandHandler
+class CreatePersonCommand < Struct.new(:world_id, :village_id, :person_id, :person_name); end
+class CreatePersonCommandHandler
   def handle(cmd)
-    world = World.find(cmd.world_id)
-    world.populate!(cmd.name_dictionary)
+    world = World.where(id: cmd.world_id).first_or_create
+    world.create_person(id: cmd.person_id, village_id: cmd.village_id, name: cmd.person_name)
   end
 end
 
