@@ -20,11 +20,7 @@ module Metacosm
 
   class Simulation
     def watch(model)
-      model_events ||= []
-      model_event_stream = Frappuccino::Stream.new(model)
-      model_event_stream.on_value do |event|
-        receive(event)
-      end
+      Frappuccino::Stream.new(model).on_value(&method(:receive))
     end
 
     def apply(command)
