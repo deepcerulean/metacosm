@@ -5,11 +5,15 @@ require 'metacosm/version'
 module Metacosm
   class Model
     include PassiveRecord
-    after_create { 
-      Simulation.current.watch(self) # move to before_create?
-      # binding.pry if self.class == Village
-      emit(created_event) if created_event_class #self.class.creation_event.new(self.to_h))
-    }
+    after_create :register_observer, :emit_creation_event
+
+    def register_observer
+      Simulation.current.watch(self)
+    end
+
+    def emit_creation_event
+      emit(creation_event) if created_event_class
+    end
 
     # after_update  { emit updated_event }
     # after_destroy { emit destroyed_event }
@@ -41,7 +45,7 @@ module Metacosm
       klass.create(attributes_for_event(klass))
     end
 
-    def created_event
+    def creation_event
       assemble_event(created_event_class)
     end
 
@@ -94,7 +98,7 @@ module Metacosm
       events.push(event) if record
 
       listener = listener_for(event)
-      listener.receive(event)
+      listener.receive(event.attrs)
     end
 
     def events

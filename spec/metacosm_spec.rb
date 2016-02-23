@@ -17,7 +17,7 @@ describe "a simple simulation (fizzbuzz)" do
         subject { last_event }
         it { is_expected.to be_a CounterIncrementedEvent }
         its(:counter_id) { is_expected.to eql(model.id) }
-        its(:counter_value) { is_expected.to eq(1) }
+        its(:value) { is_expected.to eq(1) }
       end
 
       describe "querying for the counter value" do

@@ -19,15 +19,18 @@ class Counter < Model
 
   protected
   def fizz
-    FizzEvent.new(@counter, @id)
+    FizzEvent.create(value: @counter, counter_id: @id)
   end
 
   def buzz
-    BuzzEvent.new(@counter, @id)
+    BuzzEvent.create(value: @counter, counter_id: @id)
   end
 
   def counter_incremented
-    CounterIncrementedEvent.new(@counter, @id)
+    CounterIncrementedEvent.create(
+      value: @counter, 
+      counter_id: @id
+    )
   end
 end
 
@@ -49,11 +52,12 @@ class IncrementCounterCommandHandler
   end
 end
 
-class CounterIncrementedEvent < Struct.new(:counter_value, :counter_id); end
+class CounterIncrementedEvent < Event
+  attr_accessor :value, :counter_id
+end
 
 class CounterIncrementedEventListener < EventListener
-  def receive(event)
-    counter_id, value = event.counter_id, event.counter_value
+  def receive(value:,counter_id:)
     update_counter_view(counter_id, value)
 
     fizz_buzz!(counter_id, value)
@@ -91,14 +95,20 @@ class BuzzCommandHandler
   end
 end
 
-class FizzEvent < Struct.new(:value, :counter_id); end
+class FizzEvent < Event
+  attr_accessor :value, :counter_id
+end
+
 class FizzEventListener < EventListener
   def receive(event)
     puts "fizz"
   end
 end
 
-class BuzzEvent < Struct.new(:value, :counter_id); end
+class BuzzEvent < Event
+  attr_accessor :value, :counter_id
+end
+
 class BuzzEventListener < EventListener
   def receive(event)
     puts "buzz"

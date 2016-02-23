@@ -43,14 +43,17 @@ class CreateVillageCommandHandler
 end
 
 class VillageCreatedEvent < Event
-  attr_accessor :village_id, :name, :world_id #, :people_ids
+  attr_accessor :village_id, :name, :world_id
 end
 
 class VillageCreatedEventListener < EventListener
-  def receive(evt)
-    world_id, village_id, village_name = evt.world_id, evt.village_id, evt.name
+  def receive(world_id:, village_id:, name:)
     world = WorldView.where(world_id: world_id).first_or_create
-    world.create_village_view(world_id: world_id, village_id: village_id, name: village_name)
+    world.create_village_view(
+      world_id: world_id, 
+      village_id: village_id, 
+      name: name
+    )
   end
 end
 
@@ -68,11 +71,10 @@ class PersonCreatedEvent < Event
 end
 
 class PersonCreatedEventListener < EventListener
-  def receive(evt)
-    person_name, person_id, village_id = evt.name, evt.person_id, evt.village_id
+  def receive(name:, person_id:, village_id:)
     village_view = VillageView.where(village_id: village_id).first
     village_view.create_person_view(
-      person_name: person_name,
+      person_name: name,
       person_id: person_id,
       village_id: village_id
     )
