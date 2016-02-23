@@ -6,7 +6,7 @@ gemspec
 
 gem 'frappuccino'
 gem 'activesupport'
-gem 'passive_record', path: '../../etc/passive_record/'
+gem 'passive_record'
 
 group :test do
   gem 'rspec-its'

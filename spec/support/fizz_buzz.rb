@@ -19,11 +19,11 @@ class Counter < Model
 
   protected
   def fizz
-    FizzEvent.create(value: @counter, counter_id: @id)
+    FizzEvent.create
   end
 
   def buzz
-    BuzzEvent.create(value: @counter, counter_id: @id)
+    BuzzEvent.create
   end
 
   def counter_incremented
@@ -103,21 +103,19 @@ class BuzzCommandHandler
 end
 
 class FizzEvent < Event
-  attr_accessor :value, :counter_id
 end
 
 class FizzEventListener < EventListener
-  def receive(event)
+  def receive
     puts "fizz"
   end
 end
 
 class BuzzEvent < Event
-  attr_accessor :value, :counter_id
 end
 
 class BuzzEventListener < EventListener
-  def receive(event)
+  def receive
     puts "buzz"
   end
 end

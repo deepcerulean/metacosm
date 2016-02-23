@@ -114,7 +114,6 @@ module Metacosm
     end
 
     def apply(command)
-      # binding.pry
       handler_for(command).handle(command.attrs)
     end
 
@@ -122,7 +121,11 @@ module Metacosm
       events.push(event) if record
 
       listener = listener_for(event)
-      listener.receive(event.attrs)
+      if event.attrs.any?
+        listener.receive(event.attrs)
+      else
+        listener.receive
+      end
     end
 
     def events

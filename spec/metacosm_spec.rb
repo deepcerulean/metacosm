@@ -54,8 +54,6 @@ describe "a simple simulation (fizzbuzz)" do
         describe "the last event" do
           subject { last_event }
           it { is_expected.to be_a BuzzEvent }
-          its(:counter_id) { is_expected.to eql(model.id) }
-          its(:value) { is_expected.to eq(n) }
         end
 
         describe "querying for the counter value" do
@@ -91,8 +89,6 @@ describe "a simple simulation (fizzbuzz)" do
           subject { last_event }
 
           it { is_expected.to be_a BuzzEvent }
-          its(:counter_id) { is_expected.to eql(model.id) }
-          its(:value) { is_expected.to eq(n) }
         end
 
         describe "querying for the counter value" do
@@ -126,40 +122,40 @@ describe "a more complex simulation (village)" do
 
       let(:create_village_command) do
         CreateVillageCommand.create(
-          world_id: world_id, 
-          village_id: village_id, 
+          world_id: world_id,
+          village_id: village_id,
           village_name: village_name
         )
       end
 
       let(:rename_village_command) do
         RenameVillageCommand.create(
-          village_id: village_id, 
+          village_id: village_id,
           new_village_name: "Newcity"
         )
       end
 
       let(:village_created_event) do
         VillageCreatedEvent.create(
-          world_id: world_id, 
-          village_id: village_id, 
+          world_id: world_id,
+          village_id: village_id,
           name: village_name
         )
       end
 
       let(:populate_world_command) do
         PopulateWorldCommand.create(
-          world_id: world_id, 
-          name_dictionary: %w[ Alice ], 
+          world_id: world_id,
+          name_dictionary: %w[ Alice ],
           per_village: people_per_village
         )
       end
       #
       let(:create_person_command) do
         CreatePersonCommand.create(
-          world_id: world_id, 
-          village_id: village_id, 
-          person_id: person_id, 
+          world_id: world_id,
+          village_id: village_id,
+          person_id: person_id,
           person_name: "Alice"
         )
       end
@@ -210,7 +206,7 @@ describe "a more complex simulation (village)" do
       it 'should rename a village' do
         given_no_activity.
           when(
-            create_village_command, 
+            create_village_command,
             rename_village_command
           ).expect_query(village_names_query, to_find: ["Newcity"])
       end
