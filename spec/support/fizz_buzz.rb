@@ -66,7 +66,7 @@ class CounterIncrementedEventListener < EventListener
 
   def update_counter_view(counter_id, value)
     counter_view = CounterView.where(counter_id: counter_id).first_or_create
-    counter_view.value = value #update_value(value)
+    counter_view.value = value
   end
 
   private
