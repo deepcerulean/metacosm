@@ -6,7 +6,7 @@ authors: Joseph Weissman
 email: jweissman1986@gmail.com
 homepage: https://rubygems.org/gems/metacosm
 dependencies:
-  passive_record: ~> 0.1.8
+  passive_record: ~> 0.2
 development_dependencies:
   bundler: ~> 1.10
   codeclimate-test-reporter: ~> 0.1
