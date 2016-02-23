@@ -47,7 +47,7 @@ end
 
 class IncrementCounterCommandHandler
   def handle(command)
-    counter = Counter.find_by(command.counter_id)
+    counter = Counter.find(command.counter_id)
     counter.increment!(command.increment)
   end
 end
@@ -82,7 +82,7 @@ end
 class FizzCommand < Struct.new(:counter_id, :value); end
 class FizzCommandHandler
   def handle(command)
-    counter = Counter.find_by(command.counter_id)
+    counter = Counter.find(command.counter_id)
     counter.fizz!
   end
 end
@@ -90,7 +90,7 @@ end
 class BuzzCommand < Struct.new(:counter_id, :value); end
 class BuzzCommandHandler
   def handle(command)
-    counter = Counter.find_by(command.counter_id)
+    counter = Counter.find(command.counter_id)
     counter.buzz!
   end
 end

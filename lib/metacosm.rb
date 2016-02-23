@@ -7,6 +7,15 @@ module Metacosm
     include PassiveRecord
     after_create :register_observer, :emit_creation_event
 
+    def update(attrs={})
+      attrs.each do |k,v|
+        send("#{k}=",v)
+      end
+
+      emit(updation_event(attrs)) if updated_event_class
+    end
+
+    protected
     def register_observer
       Simulation.current.watch(self)
     end
@@ -15,10 +24,6 @@ module Metacosm
       emit(creation_event) if created_event_class
     end
 
-    # after_update  { emit updated_event }
-    # after_destroy { emit destroyed_event }
-
-    protected
     def attributes_with_external_id
       attrs = to_h
       if attrs.key?(:id)
@@ -29,7 +34,7 @@ module Metacosm
     end
 
     # trim down extenralized attrs for evt
-    def attributes_for_event(klass)
+    def attributes_for_event(klass, additional_attrs={})
       # assume evts attrs are attr_accessible? 
       keys_to_keep = klass.instance_methods.find_all do |method|
         method != :== &&
@@ -38,11 +43,12 @@ module Metacosm
       end
 
       attributes_with_external_id.
-        delete_if {|k,v| !keys_to_keep.include?(k) }
+        delete_if {|k,v| !keys_to_keep.include?(k) }.
+        merge(additional_attrs)
     end
 
-    def assemble_event(klass)
-      klass.create(attributes_for_event(klass))
+    def assemble_event(klass, addl_attrs={})
+      klass.create(attributes_for_event(klass).merge(addl_attrs))
     end
 
     def creation_event
@@ -52,6 +58,15 @@ module Metacosm
     def created_event_class
       created_event_name = self.class.name + "CreatedEvent"
       Object.const_get(created_event_name) rescue nil
+    end
+
+    def updation_event(changed_attrs={})
+      assemble_event(updated_event_class, changed_attrs)
+    end
+
+    def updated_event_class
+      updated_event_name = self.class.name + "UpdatedEvent"
+      Object.const_get(updated_event_name) rescue nil
     end
 
     def blacklisted_attribute_names
@@ -129,49 +144,4 @@ module Metacosm
       listener
     end
   end
-
-  # class Experiment
-  #   def self.conduct
-  #     experiment = new
-  #     experiment.before
-  #     experiment.conduct
-  #     experiment.after
-  #     experiment
-  #   end
-
-  #   def before_step
-  #   end
-
-  #   def before
-  #   end
-
-  #   def after
-  #   end
-
-  #   def after_step
-  #   end
-
-  #   def step
-  #   end
-
-  #   protected
-  #   def concluded?
-  #     @concluded ||= false
-  #   end
-
-  #   def conclude!
-  #     @concluded = true
-  #   end
-
-  #   private
-  #   def conduct
-  #     iterate until concluded?
-  #   end
-
-  #   def iterate
-  #     before_step
-  #     step
-  #     after_step
-  #   end
-  # end
 end

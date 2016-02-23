@@ -42,6 +42,16 @@ class CreateVillageCommandHandler
   end
 end
 
+class RenameVillageCommand < Struct.new(:village_id, :new_village_name)
+end
+
+class RenameVillageCommandHandler
+  def handle(cmd)
+    village = Village.find(cmd.village_id)
+    village.update(name: cmd.new_village_name)
+  end
+end
+
 class VillageCreatedEvent < Event
   attr_accessor :village_id, :name, :world_id
 end
@@ -54,6 +64,17 @@ class VillageCreatedEventListener < EventListener
       village_id: village_id, 
       name: name
     )
+  end
+end
+
+class VillageUpdatedEvent < Event
+  attr_accessor :name, :village_id
+end
+
+class VillageUpdatedEventListener < EventListener
+  def receive(village_id:, name:)
+    village_view = VillageView.find_by(village_id: village_id)
+    village_view.name = name
   end
 end
 
@@ -121,19 +142,3 @@ class PeopleNamesQuery < Struct.new(:world_id)
     world_view.person_views.flat_map(&:person_name)
   end
 end
-
-## experiment driver
-
-# class CivilizationExperiment # < Experiment
-#   def before
-#     fire create_world #(CreateWorldCommand.new)
-#   end
-# 
-#   def step
-#     fire simulate_year #(SimulateYearCommand.new)
-#   end
-# 
-#   def create_world
-#     CreateWorldCommand
-#   end
-# end

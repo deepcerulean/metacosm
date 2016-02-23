@@ -126,6 +126,10 @@ describe "a more complex simulation (village)" do
         CreateVillageCommand.new(world_id, village_id, village_name)
       end
 
+      let(:rename_village_command) do
+        RenameVillageCommand.new(village_id, "Newcity")
+      end
+
       let(:village_created_event) do
         VillageCreatedEvent.create(world_id: world_id, village_id: village_id, name: village_name)
       end
@@ -179,6 +183,14 @@ describe "a more complex simulation (village)" do
           when(create_village_command, populate_world_command).
           expect_query(village_names_query, to_find: ["Oakville Ridge"]).
           expect_query(people_names_query, to_find: expected_names)
+      end
+
+      it 'should rename a village' do
+        given_no_activity.
+          when(
+            create_village_command, 
+            rename_village_command
+          ).expect_query(village_names_query, to_find: ["Newcity"])
       end
     end
   end
