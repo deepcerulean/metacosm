@@ -5,7 +5,8 @@ license: MIT
 authors: Joseph Weissman
 email: jweissman1986@gmail.com
 homepage: https://rubygems.org/gems/metacosm
-
+dependencies:
+  passive_record: ~> 0.1.8
 development_dependencies:
   bundler: ~> 1.10
   codeclimate-test-reporter: ~> 0.1
