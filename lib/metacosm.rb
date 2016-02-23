@@ -35,7 +35,7 @@ module Metacosm
 
     # trim down extenralized attrs for evt
     def attributes_for_event(klass, additional_attrs={})
-      # assume evts attrs are attr_accessible? 
+      # assume evts attrs are attr_accessible?
       keys_to_keep = klass.instance_methods.find_all do |method|
         method != :== &&
           method != :! &&
@@ -80,6 +80,14 @@ module Metacosm
 
   class Command
     include PassiveRecord
+
+    def attrs
+      to_h.keep_if { |k,_| k != :id }
+    end
+
+    def ==(other)
+      attrs == other.attrs
+    end
   end
 
   class Event
@@ -106,7 +114,8 @@ module Metacosm
     end
 
     def apply(command)
-      handler_for(command).handle(command)
+      # binding.pry
+      handler_for(command).handle(command.attrs)
     end
 
     def receive(event, record: true)

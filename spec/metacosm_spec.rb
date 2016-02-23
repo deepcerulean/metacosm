@@ -7,7 +7,9 @@ describe "a simple simulation (fizzbuzz)" do
 
   describe "#apply" do
     let(:increment_counter) do
-      IncrementCounterCommand.new(1, model.id)
+      IncrementCounterCommand.create(
+        increment: 1, counter_id: model.id
+      )
     end
 
     context "one command once" do
@@ -123,23 +125,43 @@ describe "a more complex simulation (village)" do
       let(:people_per_village)  { 10 }
 
       let(:create_village_command) do
-        CreateVillageCommand.new(world_id, village_id, village_name)
+        CreateVillageCommand.create(
+          world_id: world_id, 
+          village_id: village_id, 
+          village_name: village_name
+        )
       end
 
       let(:rename_village_command) do
-        RenameVillageCommand.new(village_id, "Newcity")
+        RenameVillageCommand.create(
+          village_id: village_id, 
+          new_village_name: "Newcity"
+        )
       end
 
       let(:village_created_event) do
-        VillageCreatedEvent.create(world_id: world_id, village_id: village_id, name: village_name)
+        VillageCreatedEvent.create(
+          world_id: world_id, 
+          village_id: village_id, 
+          name: village_name
+        )
       end
 
       let(:populate_world_command) do
-        PopulateWorldCommand.new(world_id, %w[ Alice ], people_per_village)
+        PopulateWorldCommand.create(
+          world_id: world_id, 
+          name_dictionary: %w[ Alice ], 
+          per_village: people_per_village
+        )
       end
       #
       let(:create_person_command) do
-        CreatePersonCommand.new(world_id, village_id, person_id, "Alice")
+        CreatePersonCommand.create(
+          world_id: world_id, 
+          village_id: village_id, 
+          person_id: person_id, 
+          person_name: "Alice"
+        )
       end
 
       let(:person_created_event) do

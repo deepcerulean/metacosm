@@ -31,24 +31,15 @@ class WorldView < View
   has_many :person_views, :through => :village_views
 end
 
-class CreateVillageCommand < Struct.new(:world_id, :village_id, :village_name)
+class CreateVillageCommand < Command
+  attr_accessor :world_id, :village_id, :village_name
 end
 
 class CreateVillageCommandHandler
-  def handle(cmd)
-    world = World.where(id: cmd.world_id).first_or_create
-    world.create_village(name: cmd.village_name, id: cmd.village_id)
+  def handle(world_id:,village_id:,village_name:)
+    world = World.where(id: world_id).first_or_create
+    world.create_village(name: village_name, id: village_id)
     self
-  end
-end
-
-class RenameVillageCommand < Struct.new(:village_id, :new_village_name)
-end
-
-class RenameVillageCommandHandler
-  def handle(cmd)
-    village = Village.find(cmd.village_id)
-    village.update(name: cmd.new_village_name)
   end
 end
 
@@ -60,15 +51,26 @@ class VillageCreatedEventListener < EventListener
   def receive(world_id:, village_id:, name:)
     world = WorldView.where(world_id: world_id).first_or_create
     world.create_village_view(
-      world_id: world_id, 
-      village_id: village_id, 
+      world_id: world_id,
+      village_id: village_id,
       name: name
     )
   end
 end
 
+class RenameVillageCommand < Command
+  attr_accessor :village_id, :new_village_name
+end
+
+class RenameVillageCommandHandler
+  def handle(village_id:, new_village_name:)
+    village = Village.find(village_id)
+    village.update name: new_village_name
+  end
+end
+
 class VillageUpdatedEvent < Event
-  attr_accessor :name, :village_id
+  attr_accessor :village_id, :name
 end
 
 class VillageUpdatedEventListener < EventListener
@@ -78,12 +80,15 @@ class VillageUpdatedEventListener < EventListener
   end
 end
 
-class CreatePersonCommand < Struct.new(:world_id, :village_id, :person_id, :person_name); end
+
+class CreatePersonCommand < Command
+  attr_accessor :world_id, :village_id, :person_id, :person_name
+end
 
 class CreatePersonCommandHandler
-  def handle(cmd)
-    world = World.where(id: cmd.world_id).first_or_create
-    world.create_person(id: cmd.person_id, village_id: cmd.village_id, name: cmd.person_name)
+  def handle(world_id:, village_id:, person_id:, person_name:)
+    world = World.where(id: world_id).first_or_create
+    world.create_person(id: person_id, village_id: village_id, name: person_name)
   end
 end
 
@@ -102,24 +107,30 @@ class PersonCreatedEventListener < EventListener
   end
 end
 
-class PopulateWorldCommand < Struct.new(:world_id, :name_dictionary, :per_village); end
+class PopulateWorldCommand < Command
+  attr_accessor :world_id, :name_dictionary, :per_village
+end
+
 class PopulateWorldCommandHandler
-  def handle(cmd)
-    world_id   = cmd.world_id
-    dictionary = cmd.name_dictionary
+  def handle(world_id:, name_dictionary:, per_village:)
+    world_id   = world_id
+    dictionary = name_dictionary
 
     world = World.where(id: world_id).first_or_create
 
     world.villages.each do |village|
       name = dictionary.sample
-      cmd.per_village.times do
+      per_village.times do
         village.create_person(name: name)
       end
     end
   end
 end
 
-class CreateWorldCommand < Struct.new(:world_id); end
+class CreateWorldCommand < Command
+  attr_accessor :world_id
+end
+
 class CreateWorldCommandHandler
   def handle(cmd)
     world_id = cmd.world_id
