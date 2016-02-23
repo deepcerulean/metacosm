@@ -120,24 +120,26 @@ describe "a more complex simulation (village)" do
       let(:village_id) { 'village_id' }
       let(:village_name) { 'Oakville Ridge' }
 
+      let(:people_per_village)  { 10 }
+
       let(:create_village_command) do
         CreateVillageCommand.new(world_id, village_id, village_name)
       end
 
       let(:village_created_event) do
-        VillageCreatedEvent.new(world_id, village_id, village_name)
+        VillageCreatedEvent.create(world_id: world_id, village_id: village_id, name: village_name)
       end
 
-      # let(:populate_command) do
-      #   PopulateCommand.new(world_id, %w[ Alice ])
-      # end
+      let(:populate_world_command) do
+        PopulateWorldCommand.new(world_id, %w[ Alice ], people_per_village)
+      end
       #
       let(:create_person_command) do
         CreatePersonCommand.new(world_id, village_id, person_id, "Alice")
       end
 
       let(:person_created_event) do
-        PersonCreatedEvent.new(village_id, person_id, "Alice")
+        PersonCreatedEvent.create(village_id: village_id, person_id: person_id, name: "Alice")
       end
 
       let(:village_names_query) do
@@ -156,17 +158,27 @@ describe "a more complex simulation (village)" do
       end
 
       describe 'recieving a village created event' do
-        it 'should create a village view we can lookup' do 
+        it 'should create a village view we can lookup' do
           given_events([village_created_event]).
             expect_query(village_names_query, to_find: ["Oakville Ridge"])
         end
       end
 
-      it 'should create and populate a village' do
+      it 'should create a village and a person' do
         given_no_activity.
           when(create_village_command, create_person_command).
             expect_events([village_created_event, person_created_event]).
+            expect_query(village_names_query, to_find: ["Oakville Ridge"]).
             expect_query(people_names_query, to_find: ["Alice"])
+      end
+
+      it 'should populate the world' do
+        expected_names = Array.new(people_per_village) { "Alice" }
+
+        given_no_activity.
+          when(create_village_command, populate_world_command).
+          expect_query(village_names_query, to_find: ["Oakville Ridge"]).
+          expect_query(people_names_query, to_find: expected_names)
       end
     end
   end

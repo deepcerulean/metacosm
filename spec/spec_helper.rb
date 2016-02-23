@@ -52,6 +52,7 @@ class GivenWhenThen < Struct.new(:given_events,:when_command,:then_event_class)
   def clean_slate!
     PassiveRecord.drop_all
     Simulation.current.clear!
+    self
   end
 
   def receive_events!
@@ -60,6 +61,7 @@ class GivenWhenThen < Struct.new(:given_events,:when_command,:then_event_class)
         sim.receive(evt, record: false)
       end
     end
+    self
   end
 
   def fire_commands!
@@ -68,6 +70,7 @@ class GivenWhenThen < Struct.new(:given_events,:when_command,:then_event_class)
         sim.apply(cmd)
       end
     end
+    self
   end
 
   def validate_events!
@@ -84,16 +87,19 @@ class GivenWhenThen < Struct.new(:given_events,:when_command,:then_event_class)
         expect(sim.events.last.send(k)).to eq(v)
       end
     end
+
+    self
   end
 
   def validate_query!
     if @query
       expect(@query.execute).to eq(@expected_query_results)
     end
+    self
   end
 
   def sim
-    Simulation.current
+    @sim ||= Simulation.current
   end
 end
 
