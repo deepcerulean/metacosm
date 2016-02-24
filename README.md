@@ -150,14 +150,7 @@ A Fizzbuzz implementation contrived enough to show off many of the features of t
       puts "buzz"
     end
   end
-  
-  class CounterValueQuery
-    def execute(counter_id:)
-      counter = CounterView.find_by(counter_id: counter_id)
-      counter.value
-    end
-  end
-  ````
+````
 
   Given all this prelude we can run a fizzbuzz "simulation":
 
