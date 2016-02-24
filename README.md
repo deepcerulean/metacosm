@@ -50,16 +50,16 @@ A Fizzbuzz implementation contrived enough to show off many of the features of t
   
     protected
     def fizz
-      FizzEvent.create(value: @counter, counter_id: @id)
+      FizzEvent.create
     end
   
     def buzz
-      BuzzEvent.create(value: @counter, counter_id: @id)
+      BuzzEvent.create
     end
   
     def counter_incremented
       CounterIncrementedEvent.create(
-        value: @counter, 
+        value: @counter,
         counter_id: @id
       )
     end
@@ -73,13 +73,14 @@ A Fizzbuzz implementation contrived enough to show off many of the features of t
     end
   end
   
-  class IncrementCounterCommand < Struct.new(:increment, :counter_id)
+  class IncrementCounterCommand < Command
+    attr_accessor :increment, :counter_id
   end
   
   class IncrementCounterCommandHandler
-    def handle(command)
-      counter = Counter.find_by(command.counter_id)
-      counter.increment!(command.increment)
+    def handle(increment:,counter_id:)
+      counter = Counter.find(counter_id)
+      counter.increment!(increment)
     end
   end
   
@@ -97,51 +98,55 @@ A Fizzbuzz implementation contrived enough to show off many of the features of t
   
     def update_counter_view(counter_id, value)
       counter_view = CounterView.where(counter_id: counter_id).first_or_create
-      counter_view.value = value
+      counter_view.update value: value
     end
   
     private
     def fizz_buzz!(counter_id, n)
-      fire(FizzCommand.new(counter_id, n)) if fizz?(n)
-      fire(BuzzCommand.new(counter_id, n)) if buzz?(n)
+      fire(FizzCommand.create(counter_id: counter_id)) if fizz?(n)
+      fire(BuzzCommand.create(counter_id: counter_id)) if buzz?(n)
     end
   
     def fizz?(n); n % 3 == 0 end
     def buzz?(n); n % 5 == 0 end
   end
   
-  class FizzCommand < Struct.new(:counter_id, :value); end
+  class FizzCommand < Command
+    attr_accessor :counter_id
+  end
+  
   class FizzCommandHandler
-    def handle(command)
-      counter = Counter.find_by(command.counter_id)
+    def handle(counter_id:)
+      counter = Counter.find(counter_id)
       counter.fizz!
     end
   end
   
-  class BuzzCommand < Struct.new(:counter_id, :value); end
+  class BuzzCommand < Command
+    attr_accessor :counter_id
+  end
+  
   class BuzzCommandHandler
-    def handle(command)
-      counter = Counter.find_by(command.counter_id)
+    def handle(counter_id:)
+      counter = Counter.find(counter_id)
       counter.buzz!
     end
   end
   
   class FizzEvent < Event
-    attr_accessor :value, :counter_id
   end
   
   class FizzEventListener < EventListener
-    def receive(event)
+    def receive
       puts "fizz"
     end
   end
   
   class BuzzEvent < Event
-    attr_accessor :value, :counter_id
   end
   
   class BuzzEventListener < EventListener
-    def receive(event)
+    def receive
       puts "buzz"
     end
   end
@@ -152,6 +157,37 @@ A Fizzbuzz implementation contrived enough to show off many of the features of t
       counter.value
     end
   end
+  ````
+
+  Given all this prelude we can run a fizzbuzz "simulation":
+
+````ruby
+  sim = Simulation.current
+  counter_model = Counter.create
+  counter_view = CounterView.find_by(counter_id: counter_model.id)
+  
+  counter_view.value # => 0
+
+  increment_counter_command = IncrementCounterCommand.create(
+    increment: 1, counter_id: counter_model.id
+  )
+  
+  sim.apply(increment_counter_command)
+
+  counter_view.value # => 1
+
+  100.times { sim.apply(increment_counter_command) }
+
+  sim.events.take(10)
+  # => [CounterCreatedEvent (id: 1, counter_id: 1),
+  #  CounterIncrementedEvent (id: 1, value: 1, counter_id: 1),
+  #  CounterIncrementedEvent (id: 2, value: 2, counter_id: 1),
+  #  CounterIncrementedEvent (id: 3, value: 3, counter_id: 1),
+  #  FizzEvent (id: 1),
+  #  CounterIncrementedEvent (id: 4, value: 4, counter_id: 1),
+  #  CounterIncrementedEvent (id: 5, value: 5, counter_id: 1),
+  #  BuzzEvent (id: 1),
+  #  CounterIncrementedEvent (id: 6, value: 6, counter_id: 1)]
 ````
 
 ## Requirements
