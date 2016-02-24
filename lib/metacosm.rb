@@ -6,22 +6,19 @@ module Metacosm
   class Model
     include PassiveRecord
     after_create :register_observer, :emit_creation_event
+    after_update :emit_updation_event
 
-    def update(attrs={})
-      attrs.each do |k,v|
-        send("#{k}=",v)
-      end
-
-      emit(updation_event(attrs)) if updated_event_class
-    end
-
-    protected
+    private
     def register_observer
       Simulation.current.watch(self)
     end
 
     def emit_creation_event
       emit(creation_event) if created_event_class
+    end
+
+    def emit_updation_event
+      emit(updation_event) if updated_event_class
     end
 
     def attributes_with_external_id
@@ -34,7 +31,7 @@ module Metacosm
     end
 
     # trim down extenralized attrs for evt
-    def attributes_for_event(klass, additional_attrs={})
+    def attributes_for_event(klass)
       # assume evts attrs are attr_accessible?
       keys_to_keep = klass.instance_methods.find_all do |method|
         method != :== &&
@@ -43,8 +40,7 @@ module Metacosm
       end
 
       attributes_with_external_id.
-        delete_if {|k,v| !keys_to_keep.include?(k) }.
-        merge(additional_attrs)
+        delete_if {|k,v| !keys_to_keep.include?(k) }
     end
 
     def assemble_event(klass, addl_attrs={})
@@ -52,16 +48,16 @@ module Metacosm
     end
 
     def creation_event
-      assemble_event(created_event_class)
+      assemble_event created_event_class
+    end
+
+    def updation_event
+      assemble_event updated_event_class
     end
 
     def created_event_class
       created_event_name = self.class.name + "CreatedEvent"
       Object.const_get(created_event_name) rescue nil
-    end
-
-    def updation_event(changed_attrs={})
-      assemble_event(updated_event_class, changed_attrs)
     end
 
     def updated_event_class

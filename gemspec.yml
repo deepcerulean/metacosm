@@ -7,7 +7,7 @@ email: jweissman1986@gmail.com
 homepage: https://rubygems.org/gems/metacosm
 dependencies:
   passive_record: ~> 0.2
-  frappuccino: ~> 0.3  
+  frappuccino: ~> 0.3
 development_dependencies:
   bundler: ~> 1.10
   codeclimate-test-reporter: ~> 0.1

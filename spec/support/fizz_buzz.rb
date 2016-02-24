@@ -36,9 +36,15 @@ end
 
 class CounterView < View
   attr_accessor :value, :counter_id
-  def update_value(new_value)
-    @value = new_value
-    self
+end
+
+class CounterCreatedEvent < Event
+  attr_accessor :counter_id #, :value
+end
+
+class CounterCreatedEventListener < EventListener
+  def receive(counter_id:)
+    CounterView.create(counter_id: counter_id, value: 0)
   end
 end
 
@@ -67,7 +73,7 @@ class CounterIncrementedEventListener < EventListener
 
   def update_counter_view(counter_id, value)
     counter_view = CounterView.where(counter_id: counter_id).first_or_create
-    counter_view.value = value
+    counter_view.update value: value
   end
 
   private
@@ -102,8 +108,7 @@ class BuzzCommandHandler
   end
 end
 
-class FizzEvent < Event
-end
+class FizzEvent < Event; end
 
 class FizzEventListener < EventListener
   def receive
@@ -111,8 +116,7 @@ class FizzEventListener < EventListener
   end
 end
 
-class BuzzEvent < Event
-end
+class BuzzEvent < Event; end
 
 class BuzzEventListener < EventListener
   def receive

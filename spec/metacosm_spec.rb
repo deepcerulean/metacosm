@@ -12,6 +12,37 @@ describe "a simple simulation (fizzbuzz)" do
       )
     end
 
+    it 'should run the linearized test for the README' do
+      sim = Simulation.current
+      counter_model = Counter.create
+      counter_view = CounterView.find_by(counter_id: counter_model.id)
+      
+      expect(counter_view.value).to eq(0) # => 0
+
+      increment_counter_command = IncrementCounterCommand.create(
+        increment: 1, counter_id: counter_model.id
+      )
+
+      sim.apply(increment_counter_command)
+
+      # model is updated which triggers view changes
+      expect(counter_view.value).to eq(1) # => 1
+
+      100.times { sim.apply(increment_counter_command) }
+
+      expect(sim.events.take(10).map(&:class)).to eq(
+       [CounterCreatedEvent,
+        CounterCreatedEvent,
+        CounterIncrementedEvent,
+        CounterIncrementedEvent,
+        CounterIncrementedEvent,
+        FizzEvent,
+        CounterIncrementedEvent,
+        CounterIncrementedEvent,
+        BuzzEvent,
+        CounterIncrementedEvent])
+    end 
+
     context "one command once" do
       before { simulation.apply(increment_counter) }
 

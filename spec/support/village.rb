@@ -80,7 +80,6 @@ class VillageUpdatedEventListener < EventListener
   end
 end
 
-
 class CreatePersonCommand < Command
   attr_accessor :world_id, :village_id, :person_id, :person_name
 end
