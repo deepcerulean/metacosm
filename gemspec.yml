@@ -6,7 +6,7 @@ authors: Joseph Weissman
 email: jweissman1986@gmail.com
 homepage: https://rubygems.org/gems/metacosm
 dependencies:
-  passive_record: ~> 0.2
+  passive_record: ~> 0.3
   frappuccino: ~> 0.3
 development_dependencies:
   bundler: ~> 1.10
