@@ -5,6 +5,7 @@ require 'pry'
 require 'ostruct'
 require 'metacosm'
 require 'metacosm/support/test_harness'
+require 'metacosm/support/spec_harness'
 
 include Metacosm
 

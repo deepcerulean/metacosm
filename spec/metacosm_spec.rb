@@ -12,11 +12,16 @@ describe "a simple simulation (fizzbuzz)" do
       )
     end
 
+    let(:counter_incremented) do
+      CounterIncrementedEvent.create(
+        counter_id: model.id, value: 1
+      )
+    end
+
     it 'should run the linearized test for the README' do
       sim = Simulation.current
       counter_model = Counter.create
       counter_view = CounterView.find_by(counter_id: counter_model.id)
-      
       expect(counter_view.value).to eq(0) # => 0
 
       increment_counter_command = IncrementCounterCommand.create(
@@ -41,7 +46,7 @@ describe "a simple simulation (fizzbuzz)" do
         CounterIncrementedEvent,
         BuzzEvent,
         CounterIncrementedEvent])
-    end 
+    end
 
     context "one command once" do
       before { simulation.apply(increment_counter) }
@@ -64,6 +69,12 @@ describe "a simple simulation (fizzbuzz)" do
 
         it { is_expected.to eq(1) }
       end
+    end
+
+    context "one command once (spec harness style)" do
+      before { model }
+      subject(:command) { increment_counter }
+      it { is_expected.to trigger_event(counter_incremented) }
     end
 
     context "one command ten times" do
@@ -96,12 +107,12 @@ describe "a simple simulation (fizzbuzz)" do
             counter_value_query.execute(counter_id: model.id)
           end
 
-          it { is_expected.to eq(n) } #"The counter is at 1") }
+          it { is_expected.to eq(n) }
         end
       end
 
       context 'with concurrent command sources' do
-        let(:m) { 2 }       # fibers
+        let(:m) { 5 }
         let(:threads) {
           ts = []
           m.times do
@@ -145,8 +156,8 @@ describe "a more complex simulation (village)" do
 
   describe "#apply" do
     context 'create and populate villages' do
-      let(:person_id) { 'person_id' }
-      let(:village_id) { 'village_id' }
+      let(:person_id)    { 'person_id' }
+      let(:village_id)   { 'village_id' }
       let(:village_name) { 'Oakville Ridge' }
 
       let(:people_per_village)  { 10 }
