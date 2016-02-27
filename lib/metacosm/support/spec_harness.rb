@@ -3,7 +3,7 @@ RSpec::Matchers.define :trigger_event do |event|
     # PassiveRecord.drop_all
     Simulation.current.clear!
     Simulation.current.apply(command)
-    expect(Simulation.current.events).to include(event)
+    Simulation.current.events.include?(event)
   end
 end
 
@@ -14,8 +14,8 @@ RSpec::Matchers.define :trigger_events do |*events|
 
     Simulation.current.apply(command)
 
-    events.each do |event|
-      expect(Simulation.current.events).to include(event)
+    events.all? do |event|
+      Simulation.current.events.include?(event)
     end
   end
 end
