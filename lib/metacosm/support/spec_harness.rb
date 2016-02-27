@@ -6,8 +6,8 @@ RSpec::Matchers.define :trigger_event do |event|
     Simulation.current.events.include?(event)
   end
 
-  failure_message_for_should do |command|
-    "expected that #{command} would trigger #{event}! Actual events were: #{Simulation.current.events}"
+  failure_message do |command|
+    "expected that #{command.inspect} would trigger #{event.inspect}! Actual events were: #{Simulation.current.events}"
   end
 end
 
