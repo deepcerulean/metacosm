@@ -28,8 +28,11 @@ describe "a simple simulation (fizzbuzz)" do
         increment: 1, counter_id: counter_model.id
       )
 
-      sim.apply(increment_counter_command)
+      sim.fire(increment_counter_command)
 
+      expect(counter_view.value).to eq(0) # => 0
+      sim.conduct!
+      sleep 0.2
       # model is updated which triggers view changes
       expect(counter_view.value).to eq(1) # => 1
 
@@ -46,6 +49,8 @@ describe "a simple simulation (fizzbuzz)" do
         CounterIncrementedEvent,
         BuzzEvent,
         CounterIncrementedEvent])
+
+      sim.halt!
     end
 
     context "one command once" do

@@ -1,7 +1,36 @@
 module Metacosm
   class Simulation
+    attr_accessor :running
     def watch(model)
       Frappuccino::Stream.new(model).on_value(&method(:receive))
+    end
+
+    def fire(command)
+      command_queue.push(command)
+    end
+
+    def command_queue
+      @command_queue ||= Queue.new
+    end
+
+    def conduct!
+      @running = true
+      @conductor_thread = Thread.new { execute }
+    end
+
+    def execute
+      while @running
+        if (command=command_queue.pop)
+          # p [ :applying!, command: command ]
+          apply(command)
+        end
+        sleep 0.01
+      end
+    end
+
+    def halt!
+      @running = false
+      @conductor_thread.terminate
     end
 
     def apply(command)
