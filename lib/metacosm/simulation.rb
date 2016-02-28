@@ -6,6 +6,7 @@ module Metacosm
     end
 
     def fire(command)
+      # p [ :firing, command: command ]
       command_queue.push(command)
     end
 
@@ -14,14 +15,12 @@ module Metacosm
     end
 
     def conduct!
-      @running = true
       @conductor_thread = Thread.new { execute }
     end
 
     def execute
-      while @running
+      while true
         if (command=command_queue.pop)
-          # p [ :applying!, command: command ]
           apply(command)
         end
         sleep 0.01
@@ -29,12 +28,18 @@ module Metacosm
     end
 
     def halt!
-      @running = false
       @conductor_thread.terminate
     end
 
+    def mutex
+      @mutex = Mutex.new 
+    end
+
     def apply(command)
+      #mutex.synchronize do
+      # p [ :applying, command: command ]
       handler_for(command).handle(command.attrs)
+      #end
     end
 
     def receive(event, record: true)

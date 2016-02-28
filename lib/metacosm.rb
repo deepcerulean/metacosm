@@ -36,7 +36,7 @@ module Metacosm
 
   class EventListener < Struct.new(:simulation)
     def fire(command)
-      self.simulation.apply(command)
+      self.simulation.fire(command)
     end
   end
 end
