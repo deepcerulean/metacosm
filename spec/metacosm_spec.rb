@@ -32,32 +32,8 @@ describe "a simple simulation (fizzbuzz)" do
 
       sim.fire(increment_counter_command)
 
-      #sleep 0.5
-      # expect(counter_view.value).to eq(0) # => 0
-      # sim.conduct!
       sleep 0.1
-      # model is updated which triggers view changes
       expect(counter_view.value).to eq(1) # => 1
-
-      # 10.times { sim.fire(increment_counter_command) }
-
-      # sleep 0.5
-
-      # actual_events = sim.events.take(10).map(&:class)
-      # expected_classes = [CounterCreatedEvent,
-      #   CounterCreatedEvent,
-      #   CounterIncrementedEvent,
-      #   CounterIncrementedEvent,
-      #   CounterIncrementedEvent,
-      #   FizzEvent,
-      #   CounterIncrementedEvent,
-      #   CounterIncrementedEvent,
-      #   BuzzEvent,
-      #   CounterIncrementedEvent]
-
-      # expect(actual_events).to eq(expected_classes)
-
-      # sim.halt!
     end
 
     context "one command once" do
