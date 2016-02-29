@@ -66,12 +66,12 @@ module Metacosm
     protected
     def handler_for(command)
       @handlers ||= {}
-      @handlers[command] ||= Object.const_get(command.class.name.split('::').last + "Handler").new
+      @handlers[command.class] ||= Object.const_get(command.class.name.split('::').last + "Handler").new
     end
 
     def listener_for(event)
       @listeners ||= {}
-      @listeners[event] ||= construct_listener_for(event)
+      @listeners[event.class] ||= construct_listener_for(event)
     end
 
     def construct_listener_for(event)
