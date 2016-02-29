@@ -34,6 +34,7 @@ describe "a simple simulation (fizzbuzz)" do
 
       sleep 0.1
       expect(counter_view.value).to eq(1) # => 1
+      sim.halt!
     end
 
     context "one command once" do
@@ -66,9 +67,10 @@ describe "a simple simulation (fizzbuzz)" do
     end
 
     context "one command ten times" do
-      xit 'is expected to play fizz buzz' do
+      it 'is expected to play fizz buzz' do
+        simulation.conduct!
         expect {
-          10.times { simulation.apply(increment_counter) }
+          10.times { simulation.fire(increment_counter); sleep 0.1 }
         }.to output(%w[ 1 2 fizz 4 buzz fizz 7 8 fizz buzz ].join("\n") + "\n").to_stdout
       end
     end
@@ -83,7 +85,7 @@ describe "a simple simulation (fizzbuzz)" do
 
         describe "the last event" do
           subject { last_event }
-          xit { is_expected.to be_a BuzzEvent }
+          it { is_expected.to be_a CounterIncrementedEvent }
         end
 
         describe "querying for the counter value" do
@@ -115,10 +117,10 @@ describe "a simple simulation (fizzbuzz)" do
           threads.map(&:join)
         end
 
-        describe "the last event" do
+        xdescribe "the last event" do
           subject { last_event }
 
-          xit { is_expected.to be_a BuzzEvent }
+          it { is_expected.to be_a BuzzEvent }
         end
 
         describe "querying for the counter value" do

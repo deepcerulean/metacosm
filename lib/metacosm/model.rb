@@ -1,8 +1,10 @@
 module Metacosm
   class Model
     include PassiveRecord
-    after_create :register_observer, :emit_creation_event
-    after_update :emit_updation_event
+    before_create :register_observer
+    after_create  :emit_creation_event
+    after_update  :emit_updation_event
+    after_destroy :emit_destruction_event
 
     private
     def register_observer
@@ -15,6 +17,10 @@ module Metacosm
 
     def emit_updation_event
       emit(updation_event) if updated_event_class
+    end
+
+    def emit_destruction_event
+      emit(destruction_event) if destroyed_event_class
     end
 
     def attributes_with_external_id
@@ -51,14 +57,29 @@ module Metacosm
       assemble_event updated_event_class
     end
 
+    def destruction_event
+      assemble_event destroyed_event_class
+    end
+
     def created_event_class
-      created_event_name = self.class.name + "CreatedEvent"
-      Object.const_get(created_event_name) rescue nil
+      @created_event_class ||= (
+        created_event_name = self.class.name + "CreatedEvent"
+        Object.const_get(created_event_name) rescue nil
+      )
     end
 
     def updated_event_class
-      updated_event_name = self.class.name + "UpdatedEvent"
-      Object.const_get(updated_event_name) rescue nil
+      @updated_event_class ||= (
+        updated_event_name = self.class.name + "UpdatedEvent";
+        Object.const_get(updated_event_name) rescue nil
+      )
+    end
+
+    def destroyed_event_class
+      @destroyed_event_class ||= (
+        destroyed_event_name = self.class.name + "DestroyedEvent";
+        Object.const_get(destroyed_event_name) rescue nil
+      )
     end
 
     def blacklisted_attribute_names

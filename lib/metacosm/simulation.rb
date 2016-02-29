@@ -6,7 +6,6 @@ module Metacosm
     end
 
     def fire(command)
-      # p [ :firing, command: command ]
       command_queue.push(command)
     end
 
@@ -32,14 +31,13 @@ module Metacosm
     end
 
     def mutex
-      @mutex = Mutex.new 
+      @mutex = Mutex.new
     end
 
     def apply(command)
-      #mutex.synchronize do
-      # p [ :applying, command: command ]
-      handler_for(command).handle(command.attrs)
-      #end
+      mutex.synchronize do
+        handler_for(command).handle(command.attrs)
+      end
     end
 
     def receive(event, record: true)
