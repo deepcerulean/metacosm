@@ -141,7 +141,7 @@ end
 
 describe "a more complex simulation (village)" do
   subject(:simulation) { Simulation.current }
-  let!(:world) { World.create(id: world_id) }
+  let!(:world) { Village::World.create(id: world_id) }
   let(:world_id) { 'world_id' }
 
   describe "#apply" do
@@ -153,7 +153,7 @@ describe "a more complex simulation (village)" do
       let(:people_per_village)  { 10 }
 
       let(:create_village_command) do
-        CreateVillageCommand.create(
+        Village::CreateVillageCommand.create(
           world_id: world_id,
           village_id: village_id,
           village_name: village_name
@@ -161,14 +161,14 @@ describe "a more complex simulation (village)" do
       end
 
       let(:rename_village_command) do
-        RenameVillageCommand.create(
+        Village::RenameVillageCommand.create(
           village_id: village_id,
           new_village_name: "Newcity"
         )
       end
 
       let(:village_created_event) do
-        VillageCreatedEvent.create(
+        Village::VillageCreatedEvent.create(
           world_id: world_id,
           village_id: village_id,
           name: village_name
@@ -176,7 +176,7 @@ describe "a more complex simulation (village)" do
       end
 
       let(:populate_world_command) do
-        PopulateWorldCommand.create(
+        Village::PopulateWorldCommand.create(
           world_id: world_id,
           name_dictionary: %w[ Alice ],
           per_village: people_per_village
@@ -184,7 +184,7 @@ describe "a more complex simulation (village)" do
       end
       #
       let(:create_person_command) do
-        CreatePersonCommand.create(
+        Village::CreatePersonCommand.create(
           world_id: world_id,
           village_id: village_id,
           person_id: person_id,
@@ -193,15 +193,15 @@ describe "a more complex simulation (village)" do
       end
 
       let(:person_created_event) do
-        PersonCreatedEvent.create(village_id: village_id, person_id: person_id, name: "Alice")
+        Village::PersonCreatedEvent.create(village_id: village_id, person_id: person_id, name: "Alice")
       end
 
       let(:village_names_query) do
-        VillageNamesQuery.new(world_id)
+        Village::VillageNamesQuery.new(world_id)
       end
 
       let(:people_names_query) do
-        PeopleNamesQuery.new(world_id)
+        Village::PeopleNamesQuery.new(world_id)
       end
 
       describe "handling a create village command" do

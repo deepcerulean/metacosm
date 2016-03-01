@@ -66,7 +66,17 @@ module Metacosm
     protected
     def handler_for(command)
       @handlers ||= {}
-      @handlers[command.class] ||= Object.const_get(command.class.name.split('::').last + "Handler").new
+      @handlers[command.class] ||= construct_handler_for(command)
+    end
+
+    def construct_handler_for(command)
+      #binding.pry
+      module_name = command.class.name.deconstantize # || "Object"
+      module_name = "Object" if module_name.empty?
+      (module_name.constantize).
+      #Object.
+        const_get(command.class.name.demodulize + "Handler").new
+      #Object
     end
 
     def listener_for(event)
@@ -75,7 +85,9 @@ module Metacosm
     end
 
     def construct_listener_for(event)
-      listener = Object.const_get(event.class.name.split('::').last + "Listener").new(self)
+      module_name = event.class.name.deconstantize # || "Object"
+      module_name = "Object" if module_name.empty?
+      listener = (module_name.constantize).const_get(event.class.name.demodulize + "Listener").new(self)
       listener
     end
   end
