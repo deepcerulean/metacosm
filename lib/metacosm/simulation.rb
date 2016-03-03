@@ -21,8 +21,11 @@ module Metacosm
       while true
         if (command=command_queue.pop)
           apply(command)
+          sleep 0.001
+        else
+          thread.pass
+          sleep 0.1
         end
-        sleep 0.01
       end
     end
 
@@ -70,13 +73,10 @@ module Metacosm
     end
 
     def construct_handler_for(command)
-      #binding.pry
-      module_name = command.class.name.deconstantize # || "Object"
+      module_name = command.class.name.deconstantize
       module_name = "Object" if module_name.empty?
       (module_name.constantize).
-      #Object.
         const_get(command.class.name.demodulize + "Handler").new
-      #Object
     end
 
     def listener_for(event)
@@ -85,7 +85,7 @@ module Metacosm
     end
 
     def construct_listener_for(event)
-      module_name = event.class.name.deconstantize # || "Object"
+      module_name = event.class.name.deconstantize
       module_name = "Object" if module_name.empty?
       listener = (module_name.constantize).const_get(event.class.name.demodulize + "Listener").new(self)
       listener
