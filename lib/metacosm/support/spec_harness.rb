@@ -7,7 +7,7 @@ RSpec::Matchers.define :trigger_event do |event|
   end
 
   failure_message do |command|
-    "expected that #{command.inspect} would trigger #{event.inspect}! Actual events were: #{Simulation.current.events}"
+    "expected that #{command.inspect} would trigger #{event.inspect}! Actual events were: #{Metacosm::Simulation.current.events}"
   end
 end
 
