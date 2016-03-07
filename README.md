@@ -23,7 +23,10 @@ Models only transform their state in response to commands, so their state can be
 
 ## Examples
 
-A Fizzbuzz implementation contrived enough to show off many of the features of the framework.
+
+Below is a Fizzbuzz implementation contrived enough to show off many of the features of the framework.
+
+You may also want to [look at this repository](https://github.com/jweissman/gol) which implements Conway's game of life using metacosm and gosu.
 
 ````ruby
   require 'metacosm'
