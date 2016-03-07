@@ -21,10 +21,9 @@ module Metacosm
       while true
         if (command=command_queue.pop)
           apply(command)
-          sleep 0.001
         else
           thread.pass
-          sleep 0.1
+          sleep 0.001
         end
       end
     end
