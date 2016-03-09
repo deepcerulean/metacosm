@@ -5,6 +5,8 @@ require 'metacosm/version'
 require 'metacosm/model'
 require 'metacosm/simulation'
 
+Thread.abort_on_exception=true
+
 module Metacosm
   class View
     include PassiveRecord
