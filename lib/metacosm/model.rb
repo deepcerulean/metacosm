@@ -1,14 +1,18 @@
 module Metacosm
   class Model
     include PassiveRecord
-    before_create :register_observer
+    # before_create :register_observer
     after_create  :emit_creation_event
     after_update  :emit_updation_event
     after_destroy :emit_destruction_event
 
     private
-    def register_observer
-      Simulation.current.watch(self)
+    # def register_observer
+    #   Simulation.current.watch(self)
+    # end
+
+    def emit(event)
+      Simulation.current.receive(event)
     end
 
     def emit_creation_event

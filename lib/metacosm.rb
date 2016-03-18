@@ -1,5 +1,4 @@
 require 'passive_record'
-require 'frappuccino'
 
 require 'metacosm/version'
 require 'metacosm/model'

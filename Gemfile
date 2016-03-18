@@ -4,9 +4,9 @@ ruby '2.3.0'
 
 gemspec
 
-gem 'frappuccino'
 gem 'activesupport'
 gem 'passive_record'
+gem 'redis'
 
 group :test do
   gem 'rspec-its'
