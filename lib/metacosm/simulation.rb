@@ -1,4 +1,9 @@
+require 'drb/drb'
 module Metacosm
+  class EventStream < Frappuccino::Stream
+    include DRb::DRbUndumped
+  end
+
   class Simulation
     attr_accessor :running
     def watch(model)
@@ -38,12 +43,24 @@ module Metacosm
 
     def apply(command)
       mutex.synchronize do
-        handler_for(command).handle(command.attrs)
+        handler = handler_for(command)
+        handler.handle(command.attrs)
       end
     end
 
+    def event_stream
+      @event_stream ||= EventStream.new(self)
+    end
+
+    def has_event_stream?
+      !@event_stream.nil?
+    end
+
     def receive(event, record: true)
-      events.push(event) if record
+      if record
+        events.push(event) 
+        emit(event) if has_event_stream?
+      end
 
       listener = listener_for(event)
       if event.attrs.any?
@@ -69,25 +86,28 @@ module Metacosm
     protected
     def handler_for(command)
       @handlers ||= {}
-      @handlers[command.class] ||= construct_handler_for(command)
+      @handlers[command.self_class_name] ||= construct_handler_for(command)
     end
 
     def construct_handler_for(command)
-      module_name = command.class.name.deconstantize
-      module_name = "Object" if module_name.empty?
+      module_name = command.handler_module_name
+      # module_name = "Object" if module_name.empty?
       (module_name.constantize).
-        const_get(command.class.name.demodulize + "Handler").new
+        const_get(command.handler_class_name).new
+    rescue => ex
+      binding.pry
+      raise ex
     end
 
     def listener_for(event)
       @listeners ||= {}
-      @listeners[event.class] ||= construct_listener_for(event)
+      @listeners[event.self_class_name] ||= construct_listener_for(event)
     end
 
     def construct_listener_for(event)
-      module_name = event.class.name.deconstantize
-      module_name = "Object" if module_name.empty?
-      listener = (module_name.constantize).const_get(event.class.name.demodulize + "Listener").new(self)
+      module_name = event.listener_module_name #class.name.deconstantize
+      # module_name = "Object" if module_name.empty?
+      listener = (module_name.constantize).const_get(event.listener_class_name).new(self)
       listener
     end
   end
