@@ -1,0 +1,48 @@
+module Metacosm
+  class RemoteSimulation < Simulation
+    def initialize
+      setup_connection
+    end
+
+    def redis_connection
+      Redis.new
+    end
+
+    def fire(command)
+      command_dto = command.attrs.merge(handler_module: command.handler_module_name, handler_class_name: command.handler_class_name)
+      redis = redis_connection
+      redis.publish(:socius_command_queue, Marshal.dump(command_dto))
+    end
+
+    def setup_connection
+      @remote_listener_thread = Thread.new do
+        begin
+          redis = redis_connection
+          redis.subscribe(:socius_event_stream) do |on|
+            on.subscribe do |channel, subscriptions|
+              puts "Subscribed to remote simulation event stream ##{channel} (#{subscriptions} subscriptions)"
+            end
+
+            on.message do |channel, message|
+              event = Marshal.load(message)
+              listener_module_name = event.delete(:listener_module)
+              listener_class_name = event.delete(:listener_class_name)
+              module_name = listener_module_name
+              module_name = "Object" if module_name.empty?
+              listener = (module_name.constantize).const_get(listener_class_name).new(self)
+              listener.receive(event)
+            end
+
+            on.unsubscribe do |channel, subscriptions|
+              puts "Unsubscribed from remote simulation event stream ##{channel} (#{subscriptions} subscriptions)"
+            end
+          end
+        rescue Redis::BaseConnectionError => error
+          puts "#{error}, retrying in 1s"
+          sleep 1
+          retry
+        end
+      end
+    end
+  end
+end

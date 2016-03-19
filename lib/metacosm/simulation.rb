@@ -82,11 +82,6 @@ module Metacosm
       end
     end
 
-    # TODO lift this stuff from socius
-    # def push_commands_to(channel:)
-    #   @command_push_channel = channel
-    # end
-
     def subscribe_for_commands(channel:)
       p [ :subscribe_to_command_channel, channel: channel ]
       redis = Redis.new
