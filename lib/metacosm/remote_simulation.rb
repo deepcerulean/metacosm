@@ -1,6 +1,8 @@
 module Metacosm
   class RemoteSimulation < Simulation
-    def initialize
+    def initialize(command_queue, event_stream)
+      @command_queue_name = command_queue
+      @event_stream_name  = event_stream
       setup_connection
     end
 
@@ -11,14 +13,14 @@ module Metacosm
     def fire(command)
       command_dto = command.attrs.merge(handler_module: command.handler_module_name, handler_class_name: command.handler_class_name)
       redis = redis_connection
-      redis.publish(:socius_command_queue, Marshal.dump(command_dto))
+      redis.publish(@command_queue_name, Marshal.dump(command_dto))
     end
 
     def setup_connection
       @remote_listener_thread = Thread.new do
         begin
           redis = redis_connection
-          redis.subscribe(:socius_event_stream) do |on|
+          redis.subscribe(@event_stream_name) do |on|
             on.subscribe do |channel, subscriptions|
               puts "Subscribed to remote simulation event stream ##{channel} (#{subscriptions} subscriptions)"
             end
