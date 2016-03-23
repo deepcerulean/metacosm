@@ -10,6 +10,8 @@ module Metacosm
       Redis.new
     end
 
+    def apply(command); fire command end
+
     def fire(command)
       command_dto = command.attrs.merge(handler_module: command.handler_module_name, handler_class_name: command.handler_class_name)
       redis = redis_connection

@@ -20,7 +20,6 @@ module Metacosm
       while true
         if (command=command_queue.pop)
           apply(command)
-          sleep 0.01
         end
         Thread.pass
       end
@@ -84,26 +83,28 @@ module Metacosm
 
     def subscribe_for_commands(channel:)
       p [ :subscribe_to_command_channel, channel: channel ]
-      redis = Redis.new
-      begin
-	redis.subscribe(channel) do |on|
-          on.subscribe do |chan, subscriptions|
-	    puts "Subscribed to ##{chan} (#{subscriptions} subscriptions)"
-	  end
+      @command_subscription_thread = Thread.new do
+        redis = Redis.new
+        begin
+          redis.subscribe(channel) do |on|
+            on.subscribe do |chan, subscriptions|
+              puts "Subscribed to ##{chan} (#{subscriptions} subscriptions)"
+            end
 
-	  on.message do |chan, message|
-	    puts "##{chan}: #{message}"
-            apply(Marshal.load(message))
-	  end
+            on.message do |chan, message|
+              puts "##{chan}: #{message}"
+              apply(Marshal.load(message))
+            end
 
-	  on.unsubscribe do |chan, subscriptions|
-	    puts "Unsubscribed from ##{chan} (#{subscriptions} subscriptions)"
-	  end
-	end
-      rescue Redis::BaseConnectionError => error
-	puts "#{error}, retrying in 1s"
-	sleep 1
-	retry
+            on.unsubscribe do |chan, subscriptions|
+              puts "Unsubscribed from ##{chan} (#{subscriptions} subscriptions)"
+            end
+          end
+        rescue Redis::BaseConnectionError => error
+          puts "#{error}, retrying in 1s"
+          sleep 1
+          retry
+        end
       end
     end
 
