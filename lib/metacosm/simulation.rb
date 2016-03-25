@@ -131,7 +131,7 @@ module Metacosm
 
     def clear!
       @events = []
-      @command_queue&.clear
+      @command_queue && @command_queue.clear
     end
 
     protected
