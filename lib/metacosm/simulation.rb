@@ -1,5 +1,10 @@
 module Metacosm
   class Simulation
+    # TODO protected?
+    def redis_connection
+      Redis.new
+    end
+
     def fire(command)
       command_queue.push(command)
     end
@@ -57,7 +62,7 @@ module Metacosm
 
       if !@event_publication_channel.nil?
         event_dto = event.attrs.merge(listener_module: event.listener_module_name, listener_class_name: event.listener_class_name)
-        redis = Redis.new
+        redis = redis_connection
         redis.publish(@event_publication_channel, Marshal.dump(event_dto))
       end
 
@@ -84,7 +89,7 @@ module Metacosm
     def subscribe_for_commands(channel:)
       p [ :subscribe_to_command_channel, channel: channel ]
       @command_subscription_thread = Thread.new do
-        redis = Redis.new
+        redis = redis_connection
         begin
           redis.subscribe(channel) do |on|
             on.subscribe do |chan, subscriptions|

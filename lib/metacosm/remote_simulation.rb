@@ -6,10 +6,6 @@ module Metacosm
       setup_connection
     end
 
-    def redis_connection
-      Redis.new
-    end
-
     def apply(command); fire command end
 
     def fire(command)
