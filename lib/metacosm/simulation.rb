@@ -5,6 +5,10 @@ module Metacosm
       Redis.new
     end
 
+    def params
+      @params ||= {}
+    end
+
     def fire(command)
       command_queue.push(command)
     end
@@ -40,6 +44,8 @@ module Metacosm
 
     def apply(command)
       mutex.synchronize do
+        received_commands.push(command)
+
         if command.is_a?(Hash)
           handler_module_name = command.delete(:handler_module)
           handler_class_name = command.delete(:handler_class_name)
@@ -52,6 +58,10 @@ module Metacosm
           handler.handle(command.attrs)
         end
       end
+    end
+
+    def received_commands
+      @commands_received ||= []
     end
 
     def apply_event(event)
@@ -97,8 +107,10 @@ module Metacosm
             end
 
             on.message do |chan, message|
-              puts "##{chan}: #{message}"
-              apply(Marshal.load(message))
+              # puts "##{chan}: #{message}"
+              command_data = Marshal.load(message)
+              p [ :got_message, command_data: command_data ]
+              apply(command_data)
             end
 
             on.unsubscribe do |chan, subscriptions|

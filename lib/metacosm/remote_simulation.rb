@@ -14,6 +14,10 @@ module Metacosm
       redis.publish(@command_queue_name, Marshal.dump(command_dto))
     end
 
+    def received_events
+      @events_received ||= []
+    end
+
     def setup_connection
       @remote_listener_thread = Thread.new do
         begin
@@ -31,13 +35,15 @@ module Metacosm
               module_name = "Object" if module_name.empty?
               listener = (module_name.constantize).const_get(listener_class_name).new(self)
               listener.receive(event)
+
+              received_events.push(event)
             end
 
             on.unsubscribe do |channel, subscriptions|
               puts "Unsubscribed from remote simulation event stream ##{channel} (#{subscriptions} subscriptions)"
             end
           end
-        rescue Redis::BaseConnectionError => error
+        rescue ::Redis::BaseConnectionError => error
           puts "#{error}, retrying in 1s"
           sleep 1
           retry
