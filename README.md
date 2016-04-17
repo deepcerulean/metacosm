@@ -31,6 +31,8 @@ Models only transform their state in response to commands, so their state can be
 
 ## Requirements
 
+Ruby 2.2.1 or higher and Redis. Gosu dependencies are needed for the client.
+
 ## Install
 
     $ gem install metacosm
