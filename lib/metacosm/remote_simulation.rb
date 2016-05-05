@@ -14,7 +14,7 @@ module Metacosm
       command_dto = command.attrs.merge(handler_module: command.handler_module_name, handler_class_name: command.handler_class_name)
 
       Thread.new do
-        REDIS.with do |redis|
+        REDIS_PUB.with do |redis|
           puts "---> Sending command over redis conn: #{redis.inspect}"
           redis.publish(@command_queue_name, Marshal.dump(command_dto))
         end
@@ -30,7 +30,7 @@ module Metacosm
     def setup_connection
       @remote_listener_thread = Thread.new do
         begin
-          REDIS.with do |redis|
+          REDIS_SUB.with do |redis|
             redis.subscribe(@event_stream_name) do |on|
               on.subscribe do |channel, subscriptions|
                 puts "Subscribed to remote simulation event stream ##{channel} (#{subscriptions} subscriptions)"
