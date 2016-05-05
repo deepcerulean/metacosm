@@ -72,7 +72,7 @@ module Metacosm
 
       if !@event_publication_channel.nil?
         event_dto = event.attrs.merge(listener_module: event.listener_module_name, listener_class_name: event.listener_class_name)
-        REDIS.with do |redis|
+        REDIS_PUB.with do |redis|
           redis.publish(@event_publication_channel, Marshal.dump(event_dto))
         end
       end
@@ -100,7 +100,7 @@ module Metacosm
     def subscribe_for_commands(channel:)
       p [ :subscribe_to_command_channel, channel: channel ]
       @command_subscription_thread = Thread.new do
-        REDIS.with do |redis|
+        REDIS_SUB.with do |redis|
           begin
             redis.subscribe(channel) do |on|
               on.subscribe do |chan, subscriptions|
