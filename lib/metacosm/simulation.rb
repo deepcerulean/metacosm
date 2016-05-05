@@ -1,9 +1,9 @@
 module Metacosm
   class Simulation
     # TODO protected?
-    def redis_connection
-      Redis.new
-    end
+    # def redis_connection
+    #   Redis.new
+    # end
 
     def params
       @params ||= {}
@@ -72,8 +72,9 @@ module Metacosm
 
       if !@event_publication_channel.nil?
         event_dto = event.attrs.merge(listener_module: event.listener_module_name, listener_class_name: event.listener_class_name)
-        redis = redis_connection
-        redis.publish(@event_publication_channel, Marshal.dump(event_dto))
+        REDIS.with do |redis|
+          redis.publish(@event_publication_channel, Marshal.dump(event_dto))
+        end
       end
 
       if !local_events_disabled?
@@ -99,28 +100,29 @@ module Metacosm
     def subscribe_for_commands(channel:)
       p [ :subscribe_to_command_channel, channel: channel ]
       @command_subscription_thread = Thread.new do
-        redis = redis_connection
-        begin
-          redis.subscribe(channel) do |on|
-            on.subscribe do |chan, subscriptions|
-              puts "Subscribed to ##{chan} (#{subscriptions} subscriptions)"
-            end
+        REDIS.with do |redis|
+          begin
+            redis.subscribe(channel) do |on|
+              on.subscribe do |chan, subscriptions|
+                puts "Subscribed to ##{chan} (#{subscriptions} subscriptions)"
+              end
 
-            on.message do |chan, message|
-              # puts "##{chan}: #{message}"
-              command_data = Marshal.load(message)
-              p [ :got_message, command_data: command_data ]
-              apply(command_data)
-            end
+              on.message do |chan, message|
+                # puts "##{chan}: #{message}"
+                command_data = Marshal.load(message)
+                p [ :got_message, command_data: command_data ]
+                apply(command_data)
+              end
 
-            on.unsubscribe do |chan, subscriptions|
-              puts "Unsubscribed from ##{chan} (#{subscriptions} subscriptions)"
+              on.unsubscribe do |chan, subscriptions|
+                puts "Unsubscribed from ##{chan} (#{subscriptions} subscriptions)"
+              end
             end
+          rescue Redis::BaseConnectionError => error
+            puts "#{error}, retrying in 1s"
+            sleep 1
+            retry
           end
-        rescue Redis::BaseConnectionError => error
-          puts "#{error}, retrying in 1s"
-          sleep 1
-          retry
         end
       end
     end

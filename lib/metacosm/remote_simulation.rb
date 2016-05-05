@@ -10,11 +10,15 @@ module Metacosm
 
     def fire(command)
       puts "---> Firing command at remote sim..."
+      puts "[command: #{command.inspect}]"
       command_dto = command.attrs.merge(handler_module: command.handler_module_name, handler_class_name: command.handler_class_name)
-      redis = redis_connection
 
       puts "---> Sending command over redis conn: #{redis.inspect}"
-      redis.publish(@command_queue_name, Marshal.dump(command_dto))
+      Thread.new do
+        REDIS.with do |redis|
+          redis.publish(@command_queue_name, Marshal.dump(command_dto))
+        end
+      end
       puts "---> Sent!"
       true
     end
@@ -26,26 +30,27 @@ module Metacosm
     def setup_connection
       @remote_listener_thread = Thread.new do
         begin
-          redis = redis_connection
-          redis.subscribe(@event_stream_name) do |on|
-            on.subscribe do |channel, subscriptions|
-              puts "Subscribed to remote simulation event stream ##{channel} (#{subscriptions} subscriptions)"
-            end
+          REDIS.with do |redis|
+            redis.subscribe(@event_stream_name) do |on|
+              on.subscribe do |channel, subscriptions|
+                puts "Subscribed to remote simulation event stream ##{channel} (#{subscriptions} subscriptions)"
+              end
 
-            on.message do |channel, message|
-              event = Marshal.load(message)
-              listener_module_name = event.delete(:listener_module)
-              listener_class_name = event.delete(:listener_class_name)
-              module_name = listener_module_name
-              module_name = "Object" if module_name.empty?
-              listener = (module_name.constantize).const_get(listener_class_name).new(self)
-              listener.receive(event)
+              on.message do |channel, message|
+                event = Marshal.load(message)
+                listener_module_name = event.delete(:listener_module)
+                listener_class_name = event.delete(:listener_class_name)
+                module_name = listener_module_name
+                module_name = "Object" if module_name.empty?
+                listener = (module_name.constantize).const_get(listener_class_name).new(self)
+                listener.receive(event)
 
-              received_events.push(event)
-            end
+                received_events.push(event)
+              end
 
-            on.unsubscribe do |channel, subscriptions|
-              puts "Unsubscribed from remote simulation event stream ##{channel} (#{subscriptions} subscriptions)"
+              on.unsubscribe do |channel, subscriptions|
+                puts "Unsubscribed from remote simulation event stream ##{channel} (#{subscriptions} subscriptions)"
+              end
             end
           end
         rescue ::Redis::BaseConnectionError => error
