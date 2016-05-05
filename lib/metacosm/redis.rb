@@ -1,6 +1,6 @@
 require 'connection_pool'
 
-REDIS = ConnectionPool.new(size: 5) do
+REDIS = ConnectionPool.new(size: 3) do
   if ENV['REDISTOGO_URL']
     puts "---> using redis to go!"
     uri = URI.parse(ENV["REDISTOGO_URL"])
