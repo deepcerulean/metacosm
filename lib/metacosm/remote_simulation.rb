@@ -9,9 +9,14 @@ module Metacosm
     def apply(command); fire command end
 
     def fire(command)
+      puts "---> Firing command at remote sim..."
       command_dto = command.attrs.merge(handler_module: command.handler_module_name, handler_class_name: command.handler_class_name)
       redis = redis_connection
+
+      puts "---> Sending command over redis conn: #{redis.inspect}"
       redis.publish(@command_queue_name, Marshal.dump(command_dto))
+      puts "---> Sent!"
+      true
     end
 
     def received_events
