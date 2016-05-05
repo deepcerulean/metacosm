@@ -13,9 +13,9 @@ module Metacosm
       puts "[command: #{command.inspect}]"
       command_dto = command.attrs.merge(handler_module: command.handler_module_name, handler_class_name: command.handler_class_name)
 
-      puts "---> Sending command over redis conn: #{redis.inspect}"
       Thread.new do
         REDIS.with do |redis|
+          puts "---> Sending command over redis conn: #{redis.inspect}"
           redis.publish(@command_queue_name, Marshal.dump(command_dto))
         end
       end

@@ -8,6 +8,8 @@ homepage: https://rubygems.org/gems/metacosm
 dependencies:
   passive_record: ~> 0.4
   redis: ~> 3.2
+  connection_pool: ~> 2.2
+
 development_dependencies:
   bundler: ~> 1.10
   codeclimate-test-reporter: ~> 0.1
